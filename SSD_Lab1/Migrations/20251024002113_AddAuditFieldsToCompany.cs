@@ -2,10 +2,10 @@
 
 #nullable disable
 
-namespace SSD_Lab1.Data.Migrations
+namespace SSD_Lab1.Migrations
 {
     /// <inheritdoc />
-    public partial class Company : Migration
+    public partial class AddAuditFieldsToCompany : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

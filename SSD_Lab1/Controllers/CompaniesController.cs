@@ -1,8 +1,4 @@
-﻿// I, Ahmed Nakhuda, student number 000878456, certify that this material is my
-// original work. No other person's work has been used without due
-// acknowledgement and I have not made my work available to anyone else.
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,10 +22,15 @@ namespace SSD_Lab1.Controllers
         }
 
         // GET: Companies
+        // In CompaniesController
         [Authorize(Roles = "Supervisor, Employee")]
+        [ResponseCache(Duration = 30)] // Cache for 30 seconds
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Companies.ToListAsync());
+            var companies = await _context.Companies
+                .AsNoTracking() // Improve read performance
+                .ToListAsync();
+            return View(companies);
         }
 
         // GET: Companies/Details/5
@@ -64,11 +65,15 @@ namespace SSD_Lab1.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Supervisor")]
-        public async Task<IActionResult> Create([Bind("Id,Name,YearsInBusiness,Website,Province")] Company company)
+        public async Task<IActionResult> Create([Bind("Name,YearsInBusiness,Website,Province")] Company company)
         {
             if (ModelState.IsValid)
             {
                 company.Id = Guid.NewGuid();
+                company.CreatedAt = DateTime.UtcNow;
+                company.CreatedBy = User.Identity?.Name ?? "System";
+                company.IsDeleted = false;
+
                 _context.Add(company);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -110,7 +115,21 @@ namespace SSD_Lab1.Controllers
             {
                 try
                 {
-                    _context.Update(company);
+                    var existingCompany = await _context.Companies.FindAsync(id);
+                    if (existingCompany == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Update only the allowed fields
+                    existingCompany.Name = company.Name;
+                    existingCompany.YearsInBusiness = company.YearsInBusiness;
+                    existingCompany.Website = company.Website;
+                    existingCompany.Province = company.Province;
+                    existingCompany.ModifiedAt = DateTime.UtcNow;
+                    existingCompany.ModifiedBy = User.Identity?.Name ?? "System";
+
+                    _context.Update(existingCompany);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -150,17 +169,16 @@ namespace SSD_Lab1.Controllers
 
         // POST: Companies/Delete/5
         [HttpPost, ActionName("Delete")]
-        [Authorize(Roles = "Supervisor")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             var company = await _context.Companies.FindAsync(id);
             if (company != null)
             {
-                _context.Companies.Remove(company);
+                company.IsDeleted = true;
+                company.DeletedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
             }
-
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

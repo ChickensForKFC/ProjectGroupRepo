@@ -1,20 +1,18 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SSD_Lab1.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace SSD_Lab1.Data
 {
     public static class DbInitializer
     {
-        public static AppSecrets appSecrets {  get; set; }
+        public static AppSecrets appSecrets { get; set; }
 
-        public static async Task<int> SeedUsersAndRoles(IServiceProvider
-        serviceProvider)
+        public static async Task<int> SeedUsersAndRoles(IServiceProvider serviceProvider)
         {
             // create the database if it doesn't exist
             var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
@@ -32,11 +30,9 @@ namespace SSD_Lab1.Data
             if (result != 0)
                 return 2; // should log an error message here
 
-
             // Check if users already exist and exit if there are
             if (userManager.Users.Count() > 0)
                 return 3; // should log an error message here
-
 
             // Seed users
             result = await SeedUsers(userManager);
@@ -46,15 +42,12 @@ namespace SSD_Lab1.Data
             return 0;
         }
 
-
-        private static async Task<int> SeedRoles(RoleManager<IdentityRole>
-        roleManager)
+        private static async Task<int> SeedRoles(RoleManager<IdentityRole> roleManager)
         {
             // Create Supervisor Role
             var result = await roleManager.CreateAsync(new IdentityRole("Supervisor"));
             if (!result.Succeeded)
                 return 1; // should log an error message here
-
 
             // Create Employee Role
             result = await roleManager.CreateAsync(new IdentityRole("Employee"));
@@ -64,9 +57,7 @@ namespace SSD_Lab1.Data
             return 0;
         }
 
-
-        private static async Task<int> SeedUsers(UserManager<ApplicationUser>
-        userManager)
+        private static async Task<int> SeedUsers(UserManager<ApplicationUser> userManager)
         {
             // Create Supervisor User
             var supervisorUser = new ApplicationUser
@@ -82,13 +73,10 @@ namespace SSD_Lab1.Data
             if (!result.Succeeded)
                 return 1; // should log an error message here
 
-
             // Assign user to Supervisor role
             result = await userManager.AddToRoleAsync(supervisorUser, "Supervisor");
             if (!result.Succeeded)
                 return 2; // should log an error message here
-
-
 
             // Create Employee User
             var employeeUser = new ApplicationUser
@@ -101,16 +89,14 @@ namespace SSD_Lab1.Data
             };
 
             result = await userManager.CreateAsync(employeeUser, appSecrets.EmployeePassword);
-
             if (!result.Succeeded)
                 return 3; // should log an error message here
 
-
             // Assign user to Employee role
             result = await userManager.AddToRoleAsync(employeeUser, "Employee");
-
             if (!result.Succeeded)
                 return 4; // should log an error message here
+
             return 0;
         }
     }

@@ -2,10 +2,10 @@
 
 #nullable disable
 
-namespace SSD_Lab1.Data.Migrations
+namespace SSD_Lab1.Migrations
 {
     /// <inheritdoc />
-    public partial class AddCompany : Migration
+    public partial class AddOrderStatusAndOrderNumber : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
